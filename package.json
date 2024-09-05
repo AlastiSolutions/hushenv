@@ -12,10 +12,29 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "themes": [
+      {
+        "label": "hushENV Theme",
+        "uiTheme": "vs-dark",
+        "path": "./themes/hushENV Theme-color-theme.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "hushenv.fileTypes": {
+          "type": "array",
+          "default": [
+            "*.env"
+          ],
+          "description": "The list of file types to hush."
+        }
+      }
+    },
     "commands": [
       {
-        "command": "hushenv.helloWorld",
-        "title": "Hello World"
+        "command": "hushenv.hush",
+        "title": "Hush Files"
       }
     ]
   },
