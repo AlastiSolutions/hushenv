@@ -1,26 +1,52 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import { applyCustomTheme, getWebviewContent } from "./util";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+let originalTheme: string | undefined;
+
 export function activate(context: vscode.ExtensionContext) {
+  const disposable = vscode.commands.registerCommand("hushenv.hush", () => {
+    const panel = vscode.window.createWebviewPanel(
+      "fileTypeSelector",
+      "Select File Types to hide",
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+      }
+    );
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "hushenv" is now active!');
+    panel.webview.html = getWebviewContent();
+    panel.webview.onDidReceiveMessage(
+      (msg) => {
+        switch (msg.command) {
+          case "updateFileTypes":
+            vscode.workspace
+              .getConfiguration()
+              .update("hushenv.fileTypes", msg.fileTypes, true);
+            break;
+        }
+      },
+      undefined,
+      context.subscriptions
+    );
+  });
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('hushenv.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from hushENV!');
-	});
+  context.subscriptions.push(disposable);
 
-	context.subscriptions.push(disposable);
+  vscode.window.onDidChangeActiveTextEditor((editor) => {
+    if (editor) {
+      if (!originalTheme) {
+        originalTheme = vscode.workspace
+          .getConfiguration("workbench")
+          .get("colorTheme");
+      }
+
+      applyCustomTheme(editor, originalTheme ?? "hushENV Theme", () => {
+        originalTheme = undefined;
+      });
+    }
+  });
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
